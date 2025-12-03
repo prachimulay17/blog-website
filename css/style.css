@@ -42,12 +42,31 @@
       color: #eee;
     }
 
-    /* Blog Section */
+    /* Blog Section - grid layout: 3 columns (desktop), 2 (tablet), 1 (mobile)
+       Gap set to 20px; cards are equal width and aligned, images stay proportional.
+       Changes limited to blog container and card rules only. */
     .blog-section {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
       padding: 40px 30px;
+      align-items: stretch; /* ensure cards align to same height */
+    }
+
+    /* Two columns on medium screens */
+    @media (max-width: 900px) {
+      .blog-section {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* Single column on small screens */
+    @media (max-width: 600px) {
+      .blog-section {
+        grid-template-columns: 1fr;
+        padding: 20px 16px;
+        gap: 18px;
+      }
     }
 
     .blog-card {
@@ -56,6 +75,14 @@
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       transition: transform 0.3s;
+      display: flex; /* make card a flex column so internal elements align */
+      flex-direction: column;
+    }
+
+    /* make each card fill the grid cell so rows are equal height */
+    .blog-section > .blog-card {
+      height: 100%;
+      align-self: stretch;
     }
 
     .blog-card:hover {
@@ -64,12 +91,15 @@
 
     .blog-card img {
       width: 100%;
-      height: 180px;
-      object-fit: cover;
+      height: auto; /* keep images proportional */
+      display: block;
     }
 
     .blog-card .content {
       padding: 20px;
+      display: flex;
+      flex-direction: column; /* allow pushing actions/buttons to bottom */
+      min-height: 160px;
     }
 
     .blog-card h2 {
@@ -82,6 +112,14 @@
       color: #333;
     }
 
+    /* Limit post preview to two lines with ellipsis, keep font unchanged */
+    .blog-card .content p {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
     .blog-card button {
       margin-top: 15px;
       background-color: var(--mid-dark);
@@ -90,6 +128,28 @@
       padding: 8px 16px;
       border-radius: 20px;
       cursor: pointer;
+    }
+
+    /* ensure read-more sits at the bottom of the card content - small pill button */
+    .blog-card .read-more,
+    .blog-card a.read-more {
+      display: inline-block;
+      width: fit-content;
+      margin-top: auto;
+      background-color: var(--mid-dark);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    .blog-card .read-more:hover,
+    .blog-card a.read-more:hover {
+      background-color: var(--dark);
     }
 
     .blog-card button:hover {
@@ -151,5 +211,115 @@
   color: white;
   transform: scale(1.05);
 }
+
+/* Single post (Read More) styling */
+.single-post-card {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #ffffff; /* white card */
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+.single-post-card .content {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px; /* gives room so actions sit at the bottom */
+}
+.single-post-card h1 {
+  font-size: 28px;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+.single-post-card .meta {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.single-post-card .post-body {
+  color: #222;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+/* Action buttons (Edit / Delete) - use theme variable --dark */
+.post-actions {
+  display: flex;
+  gap: 12px; /* space between buttons */
+  margin-top: auto; /* push actions to bottom of the content column */
+  justify-content: flex-end;
+  align-items: center;
+}
+.post-actions a,
+.post-actions button {
+  background: var(--dark);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-block;
+}
+.post-actions a.delete-post,
+.post-actions button.delete-post {
+  background: var(--dark);
+}
+.post-actions a.edit-post {
+  background: var(--dark);
+}
+.post-actions a:hover,
+.post-actions button:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* Make sure cards on the listing still look good with the small action controls */
+.blog-card .post-actions {
+  padding-top: 10px;
+  justify-content: flex-start;
+}
+
+/* --- User-provided: container + card CSS (appended) --- */
+.blog-section {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* desktop: 3 per row */
+  gap: 20px; /* equal spacing between cards */
+  align-items: stretch; /* ensure cards in a row have equal height */
+}
+
+.blog-section > .blog-card {
+  display: flex;
+  flex-direction: column; /* keep content flow top→bottom, allow footer/button to sit at bottom */
+  height: 100%; /* let the grid row height control card height so all cards match */
+  align-self: stretch;
+}
+
+.blog-card img {
+  width: 100%;
+  height: 180px; /* fixed visual area while preserving proportions via object-fit */
+  object-fit: cover; /* crops rather than stretches */
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .blog-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .blog-section {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .blog-card img {
+    height: auto; /* keep images proportional and prevent unnecessary cropping on small screens */
+  }
+}
+
+/* --- End user-provided block --- */
 
 
