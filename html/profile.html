@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PurpleBlog Profile</title>
+  <link rel="stylesheet" href="/css/profile.css" />
+</head>
+<body>
+  <div class="profile-container">
+    <h2>Your Profile</h2>
+
+    <div class="user-info">
+      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile Icon" class="profile-pic" id="profilePic" />
+      <p><strong>Name:</strong> <span id="profileName">Guest</span></p>
+      <p><strong>Email:</strong> <span id="profileEmail">Not signed in</span></p>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn" id="logoutBtn" style="display:none;">Logout</button>
+    </div>
+
+    <div class="sign-in-section">
+      <h3>Sign In</h3>
+      <button class="btn" id="googleSignInBtn">
+        <img src="https://img.icons8.com/color/48/000000/google-logo.png" alt="Google Logo" />
+        Sign in with Google
+      </button>
+
+      <form id="classicLoginForm">
+        <input type="email" id="emailInput" placeholder="Email" required />
+        <input type="password" id="passwordInput" placeholder="Password" required />
+        <button class="btn" type="submit">Sign in with Email</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="/javascript/profile.js"></script>
+</body>
+</html>

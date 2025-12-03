@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Write Blog - PurpleBlog</title>
+    <link rel="stylesheet" href="/css/nav.css" />
+  <link rel="stylesheet" href="/css/write.css" />
+
+</head>
+<body>
+   
+  <main class="write-container">
+    <h1>Write Your Blog</h1>
+    <input type="text" id="title" placeholder="Blog Title" maxlength="100" />
+    <textarea id="content" placeholder="Start writing your blog here..." spellcheck="true"></textarea>
+    <button id="postBtn">Post</button>
+
+    
+    <script>
+  document.getElementById("postBtn").addEventListener("click", function() {
+    alert("Your blog has been posted!");
+    window.location.href = "index.html"; // redirects to home
+  });
+</script>
+
+
+  <script src="/javascript/write.js"></script>
+</body>
+</html>
