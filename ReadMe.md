@@ -32,6 +32,7 @@ A Read More button opens the full content.
 
 Content loads dynamically through JavaScript.
 
+<img width="1920" height="1080" alt="Screenshot (27)" src="https://github.com/user-attachments/assets/6bc39304-ca2b-424f-b182-cc86412a7f3d" />
 
 🧑‍💻 Author
 
