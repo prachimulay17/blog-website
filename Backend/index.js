@@ -1,17 +1,17 @@
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" }); // explicitly point t0o the .env file
-import connectdb from "./db/index.js";
+dotenv.config({ path: "./.env" });
 
+import { app } from "./app.js";
+import connectDB from "./db/index.js";
 
+const PORT = process.env.PORT || 8000;
 
-
-connectdb()
+connectDB()
   .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
-      console.log("Server running on:", process.env.PORT || 8000);
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
   })
   .catch((error) => {
-    console.log("Connection with database failed:", error);
+    console.error("❌ Database connection failed:", error);
   });
-import { app } from "./app.js";
