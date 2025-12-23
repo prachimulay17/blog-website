@@ -14,31 +14,23 @@ const blogSchema = new mongoose.Schema(
       required: true
     },
 
-    author: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // 🔗 relation
-      required: true
-    },
-
     coverImage: {
-      type: String, // Cloudinary URL
+      type: String,
       default: ""
     },
 
-    status: {
-      type: String,
-      enum: ["draft", "published"],
-      default: "published"
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true
     },
 
-    views: {
-      type: Number,
-      default: 0
+    isPublished: {
+      type: Boolean,
+      default: true
     }
   },
-  {
-    timestamps: true
-  }
+  { timestamps: true }
 );
 
 export const Blog = mongoose.model("Blog", blogSchema);

@@ -20,7 +20,12 @@ const uploadoncloudinary = async (localfilepath) => {
       folder: "purpleblog/avatars"
     });
     console.log('cloudinary response',response.url);
+    const localfilepathexist=fs.existsSync(localfilepath);
+
+      if(localfilepathexist){
     fs.unlinkSync(localfilepath); //remove file from local storage after upload
+      }
+
     return response;
 
   } catch (error) {

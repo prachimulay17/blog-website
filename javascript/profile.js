@@ -1,58 +1,102 @@
-const profileName = document.getElementById('profileName');
-const profileEmail = document.getElementById('profileEmail');
-const profilePic = document.getElementById('profilePic');
-const logoutBtn = document.getElementById('logoutBtn');
-const googleSignInBtn = document.getElementById('googleSignInBtn');
-const classicLoginForm = document.getElementById('classicLoginForm');
-const signInSection = document.querySelector('.sign-in-section');
+const profileName = document.getElementById("profileName");
+const profileEmail = document.getElementById("profileEmail");
+const profilePic = document.getElementById("profilePic");
+const logoutBtn = document.getElementById("logoutBtn");
+const classicLoginForm = document.getElementById("classicLoginForm");
+const signInSection = document.querySelector(".sign-in-section");
+const googleSignInBtn = document.getElementById("googleSignInBtn");
 
-// Initialize Google Sign In
-window.onload = function() {
-  google.accounts.id.initialize({
-    client_id: 'YOUR_GOOGLE_CLIENT_ID',  // Replace with your client ID
-    callback: handleGoogleSignin
-  });
-};
+googleSignInBtn.style.display = "none"; // hide for now
 
-googleSignInBtn.addEventListener('click', () => {
-  google.accounts.id.prompt(handleGoogleSignin);
-});
+const API_BASE = "http://localhost:8000/api/users";
 
-function handleGoogleSignin(response) {
-  if (!response.credential) {
-    alert('Google Sign-in failed');
-    return;
-  }
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  displayUserInfo(payload.name, payload.email, payload.picture);
-  toggleSignIn(false);
-}
-
+/* =========================
+   UI HELPERS
+========================= */
 function displayUserInfo(name, email, picUrl) {
   profileName.textContent = name;
   profileEmail.textContent = email;
-  profilePic.src = picUrl || 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
-  logoutBtn.style.display = 'block';
+  profilePic.src =
+    picUrl || "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  logoutBtn.style.display = "block";
 }
 
-logoutBtn.addEventListener('click', () => {
-  profileName.textContent = 'Guest';
-  profileEmail.textContent = 'Not signed in';
-  profilePic.src = 'https://cdn-icons-png.flaticon.com/512/847/847969.png';
-  logoutBtn.style.display = 'none';
+function resetUserInfo() {
+  profileName.textContent = "Guest";
+  profileEmail.textContent = "Not signed in";
+  profilePic.src =
+    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  logoutBtn.style.display = "none";
+}
+
+function toggleSignIn(show) {
+  signInSection.style.display = show ? "block" : "none";
+}
+
+/* =========================
+   FETCH CURRENT USER
+========================= */
+async function fetchCurrentUser() {
+  try {
+    const res = await fetch(`${API_BASE}/me`, {
+      credentials: "include"
+    });
+
+    if (!res.ok) throw new Error("Not logged in");
+
+    const data = await res.json();
+    const user = data.data;
+
+    displayUserInfo(user.username, user.email, user.avatar);
+    toggleSignIn(false);
+  } catch (err) {
+    resetUserInfo();
+    toggleSignIn(true);
+  }
+}
+
+/* =========================
+   LOGIN (EMAIL/PASSWORD)
+========================= */
+classicLoginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("emailInput").value;
+  const password = document.getElementById("passwordInput").value;
+
+  const res = await fetch(`${API_BASE}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include", // 🔥 REQUIRED
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.message || "Login failed");
+    return;
+  }
+
+  alert("Login successful");
+  fetchCurrentUser();
+});
+
+/* =========================
+   LOGOUT
+========================= */
+logoutBtn.addEventListener("click", async () => {
+  await fetch(`${API_BASE}/logout`, {
+    method: "POST",
+    credentials: "include"
+  });
+
+  alert("Logged out");
+  resetUserInfo();
   toggleSignIn(true);
 });
 
-classicLoginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  // For now just mock login success
-  const email = document.getElementById('emailInput').value;
-  displayUserInfo('User', email, null);
-  toggleSignIn(false);
-});
-
-function toggleSignIn(showSignIn) {
-  signInSection.style.display = showSignIn ? 'block' : 'none';
-}
-
-
+/* =========================
+   ON PAGE LOAD
+========================= */
+fetchCurrentUser();

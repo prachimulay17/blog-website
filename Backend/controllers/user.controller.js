@@ -39,14 +39,13 @@ const registeruser = asyncHandeler(async (req, res) => {
     avatarUrl = avatar.secure_url;
   }
 
-  // 4️⃣ Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
+  
 
   // 5️⃣ Create user
   const user = await User.create({
     username: username.toLowerCase(),
     email,
-    password: hashedPassword,
+    password,
     avatar: avatarUrl,
     bio: bio || ""
   });
@@ -69,6 +68,220 @@ const registeruser = asyncHandeler(async (req, res) => {
     .json(new ApiResponse(201, "User registered successfully", createduser));
 });
 
-export { registeruser };
+
+const loginUser = asyncHandeler(async (req, res) => {
+  const { username,email, password } = req.body;
+
+  // 1️⃣ validation
+  if ((!email && !username) || !password) {
+    throw new ApiError(400, "Email or username and password are required");
+  }
+
+  // 2️⃣ find user
+  const user = await User.findOne({
+    $or: [{ email }, { username }]
+  });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // 3️⃣ check password
+  const isPasswordValid = await user.isPasswordCorrect(password);
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid credentials");
+  }
+
+  // 4️⃣ generate tokens
+  const accessToken = await user.generateAccessToken();
+  const refreshToken = await user.generateRefreshToken();
+
+  // 5️⃣ save refresh token
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  // 6️⃣ cookie options
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true, // true in production (https)
+   
+  };
+
+  // 7️⃣ send response
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(
+      new ApiResponse(200, "Login successful", {
+        user: {
+          _id: user._id,
+          username: user.username,
+          email: user.email,
+          avatar: user.avatar,
+          bio: user.bio
+        }
+      })
+    );
+});
+
+
+const logoutUser = asyncHandeler(async (req, res) => {
+  // req.user is set by auth middleware (JWT verified)
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { refreshToken: undefined }
+    },
+    { new: true }
+  );
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
+    .json(new ApiResponse(200, "Logout successful"));
+});
+
+
+
+const refreshAccessToken = asyncHandeler(async (req, res) => {
+  const incomingRefreshToken =
+    req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token missing");
+  }
+
+  let decodeduser;
+  try {
+    decodeduser = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+  } catch (error) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const user = await User.findById(decodeduser._id).select("+refreshToken");
+
+  if (!user || user.refreshToken !== incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token expired or revoked");
+  }
+
+  // 🔁 rotate tokens
+  const newAccessToken = user.generateAccessToken();
+  const newRefreshToken = user.generateRefreshToken();
+
+  user.refreshToken = newRefreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: true
+    
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", newAccessToken, cookieOptions)
+    .cookie("refreshToken", newRefreshToken, cookieOptions)
+    .json(
+      new ApiResponse(200, "Access token refreshed", {
+        accessToken: newAccessToken
+      })
+    );
+});
+
+const getCurrentUser = asyncHandeler(async (req, res) => {
+  return res.status(200).json(
+    new ApiResponse(200, "User fetched", req.user)
+  );
+});
+
+const updateUser = asyncHandeler(async (req, res) => {
+  const userId = req.user._id;
+  const { username, bio } = req.body;
+
+  const updateData = {};
+
+  // 🔹 username update
+  if (username) {
+    const existingUser = await User.findOne({
+      username,
+      _id: { $ne: userId }
+    });
+
+    if (existingUser) {
+      throw new ApiError(409, "Username already taken");
+    }
+
+    updateData.username = username.toLowerCase();
+  }
+
+  // 🔹 bio update
+  if (bio !== undefined) {
+    updateData.bio = bio;
+  }
+
+  // 🔹 avatar update
+  const avatarLocalFilePath = req.files?.avatar?.[0]?.path;
+  if (avatarLocalFilePath) {
+    const avatar = await uploadoncloudinary(avatarLocalFilePath);
+    if (!avatar) {
+      throw new ApiError(500, "Avatar upload failed");
+    }
+    updateData.avatar = avatar.secure_url;
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: updateData },
+    { new: true }
+  ).select("-password -refreshToken");
+
+  if (!updatedUser) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, "User updated successfully", updatedUser)
+  );
+});
+
+
+const deleteUser = asyncHandeler(async (req, res) => {
+  const userId = req.user._id;
+
+  const user = await User.findByIdAndDelete(userId);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict"
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", cookieOptions)
+    .clearCookie("refreshToken", cookieOptions)
+    .json(
+      new ApiResponse(200, "User account deleted successfully")
+    );
+});
+
+
+
+export { registeruser, loginUser,logoutUser, refreshAccessToken, getCurrentUser, updateUser,deleteUser };
 
 
