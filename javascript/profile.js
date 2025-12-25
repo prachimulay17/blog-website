@@ -1,3 +1,6 @@
+
+
+
 const profileName = document.getElementById("profileName");
 const profileEmail = document.getElementById("profileEmail");
 const profilePic = document.getElementById("profilePic");

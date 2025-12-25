@@ -1,3 +1,6 @@
+const API_BASE = "http://localhost:8000";
+
+
 const registerForm = document.getElementById("registerForm");
 
 registerForm?.addEventListener("submit", async (e) => {

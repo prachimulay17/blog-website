@@ -103,10 +103,11 @@ const loginUser = asyncHandeler(async (req, res) => {
 
   // 6️⃣ cookie options
   const cookieOptions = {
-    httpOnly: true,
-    secure: true, // true in production (https)
-   
-  };
+  httpOnly: true,
+  secure: false, // 🔥 MUST be false on localhost
+  sameSite: "lax"
+};
+
 
   // 7️⃣ send response
   return res
@@ -138,9 +139,11 @@ const logoutUser = asyncHandeler(async (req, res) => {
   );
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: true
-  };
+  httpOnly: true,
+  secure: false, // 🔥 MUST be false on localhost
+  sameSite: "lax"
+};
+
 
   return res
     .status(200)
@@ -183,10 +186,10 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: true
-    
-  };
+  httpOnly: true,
+  secure: false, // 🔥 MUST be false on localhost
+  sameSite: "lax"
+};
 
   return res
     .status(200)
@@ -266,10 +269,11 @@ const deleteUser = asyncHandeler(async (req, res) => {
   }
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict"
-  };
+  httpOnly: true,
+  secure: false, // 🔥 MUST be false on localhost
+  sameSite: "lax"
+};
+
 
   return res
     .status(200)

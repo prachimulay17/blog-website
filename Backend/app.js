@@ -6,7 +6,12 @@ import blogRouter from "./routes/blog.router.js";
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://127.0.0.1:5500", // frontend origin
+    credentials: true
+  })
+);
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

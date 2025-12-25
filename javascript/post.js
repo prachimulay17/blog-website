@@ -1,3 +1,6 @@
+const API_BASE = "http://localhost:8000";
+
+
 // Parse query string to get `id`
 function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -13,68 +16,86 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function renderPost() {
-  const container = document.getElementById('postContainer');
+async function renderPost() {
+  const container = document.getElementById("postContainer");
   if (!container) return;
 
-  const id = getQueryParam('id');
-  if (!id) {
-    container.innerHTML = '<p>No post id provided.</p>';
+  const blogId = getQueryParam("id");
+  if (!blogId) {
+    container.innerHTML = "<p>No post id provided.</p>";
     return;
   }
 
-  let posts = [];
   try {
-    posts = JSON.parse(localStorage.getItem('posts') || '[]');
-  } catch (e) {
-    console.error('Failed to parse posts', e);
-  }
+    const res = await fetch(`${API_BASE}/api/blogs/${blogId}`);
+    const data = await res.json();
 
-  const post = posts.find(p => String(p.id) === String(id));
-  if (!post) {
-    container.innerHTML = '<p>Post not found.</p>';
-    return;
-  }
+    if (!res.ok) {
+      container.innerHTML = "<p>Post not found.</p>";
+      return;
+    }
 
-  const created = new Date(post.created).toLocaleString();
-  const contentHtml = escapeHtml(post.content).replace(/\n/g, '<br>');
+    const post = data.data;
+    const created = new Date(post.createdAt).toLocaleString();
+    const contentHtml = escapeHtml(post.content).replace(/\n/g, "<br>");
 
-  container.innerHTML = `
-    <article class="blog-card single-post-card">
-      <div class="content">
-        <h1>${escapeHtml(post.title)}</h1>
-        <p class="meta">${created}</p>
-        <div class="post-actions">
-          <a href="write.html?editId=${post.id}" class="edit-post">Edit</a>
-          <a href="#" class="delete-post" data-id="${post.id}">Delete</a>
+    container.innerHTML = `
+      <article class="blog-card single-post-card">
+        <div class="content">
+          <h1>${escapeHtml(post.title)}</h1>
+          <p class="meta">
+            by ${escapeHtml(post.author.username)} · ${created}
+          </p>
+
+          <div class="post-actions">
+            <a href="write.html?editId=${post._id}" class="edit-post">Edit</a>
+            <a href="#" class="delete-post" data-id="${post._id}">Delete</a>
+          </div>
+
+          <div class="post-body">${contentHtml}</div>
         </div>
-        <div class="post-body">${contentHtml}</div>
-      </div>
-    </article>
-  `;
+      </article>
+    `;
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = "<p>Failed to load post.</p>";
+  }
 }
 
 document.addEventListener('DOMContentLoaded', renderPost);
 
 // Handle delete from single post view
-document.addEventListener('click', (e) => {
+document.addEventListener("click", async (e) => {
   const t = e.target;
   if (!t || !t.classList) return;
 
-  if (t.classList.contains('delete-post')) {
+  if (t.classList.contains("delete-post")) {
     e.preventDefault();
-    const id = t.getAttribute('data-id');
-    if (!id) return;
-    if (!confirm('Delete this post? This cannot be undone.')) return;
+
+    const blogId = t.getAttribute("data-id");
+    if (!blogId) return;
+
+    if (!confirm("Delete this post? This cannot be undone.")) return;
+
     try {
-      let posts = JSON.parse(localStorage.getItem('posts') || '[]');
-      posts = posts.filter(p => String(p.id) !== String(id));
-      localStorage.setItem('posts', JSON.stringify(posts));
-      // Redirect to home after delete
-      window.location.href = 'index.html';
+      const res = await fetch(`${API_BASE}/api/blogs/${blogId}`, {
+        method: "DELETE",
+        credentials: "include" // 🔥 REQUIRED (auth)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Not allowed to delete this post");
+        return;
+      }
+
+      alert("Post deleted successfully");
+      window.location.href = "index.html";
     } catch (err) {
-      console.error('Failed to delete post', err);
-      alert('Could not delete the post.');
+      console.error(err);
+      alert("Failed to delete post.");
     }
   }
 });
+

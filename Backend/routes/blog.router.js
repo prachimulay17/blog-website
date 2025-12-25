@@ -6,7 +6,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 const router = Router();
 
 router.post(
-  "/createblog",
+  "/",
  verifyJWT,
   upload.fields([{ name: "coverImage", maxCount: 1 }]),
   createBlog
