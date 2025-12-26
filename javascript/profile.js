@@ -1,105 +1,168 @@
+const API_BASE = "http://localhost:8000";
 
-
-
-const profileName = document.getElementById("profileName");
-const profileEmail = document.getElementById("profileEmail");
-const profilePic = document.getElementById("profilePic");
-const logoutBtn = document.getElementById("logoutBtn");
-const classicLoginForm = document.getElementById("classicLoginForm");
+// Elements for auth state management
 const signInSection = document.querySelector(".sign-in-section");
-const googleSignInBtn = document.getElementById("googleSignInBtn");
-
-googleSignInBtn.style.display = "none"; // hide for now
-
-const API_BASE = "http://localhost:8000/api/users";
+const profilePage = document.querySelector(".profile-page");
+const logoutBtn = document.getElementById("logoutBtn");
 
 /* =========================
-   UI HELPERS
+   LOAD PROFILE (PROTECTED)
 ========================= */
-function displayUserInfo(name, email, picUrl) {
-  profileName.textContent = name;
-  profileEmail.textContent = email;
-  profilePic.src =
-    picUrl || "https://cdn-icons-png.flaticon.com/512/847/847969.png";
-  logoutBtn.style.display = "block";
-}
-
-function resetUserInfo() {
-  profileName.textContent = "Guest";
-  profileEmail.textContent = "Not signed in";
-  profilePic.src =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
-  logoutBtn.style.display = "none";
-}
-
-function toggleSignIn(show) {
-  signInSection.style.display = show ? "block" : "none";
-}
-
-/* =========================
-   FETCH CURRENT USER
-========================= */
-async function fetchCurrentUser() {
+async function loadProfile() {
   try {
-    const res = await fetch(`${API_BASE}/me`, {
+    // 1️⃣ Get logged-in user
+    const meRes = await fetch(`${API_BASE}/api/users/me`, {
       credentials: "include"
     });
 
-    if (!res.ok) throw new Error("Not logged in");
+    if (!meRes.ok) {
+      // ❌ Not logged in - show sign-in section, hide profile page
+      if (signInSection) signInSection.style.display = "block";
+      if (profilePage) profilePage.style.display = "none";
+      if (logoutBtn) logoutBtn.style.display = "none";
+      return;
+    }
 
-    const data = await res.json();
-    const user = data.data;
+    // ✅ Logged in - show profile page, hide sign-in section
+    if (signInSection) signInSection.style.display = "none";
+    if (profilePage) profilePage.style.display = "block";
+    if (logoutBtn) logoutBtn.style.display = "block";
 
-    displayUserInfo(user.username, user.email, user.avatar);
-    toggleSignIn(false);
+    const { data: user } = await meRes.json();
+
+    // Update profile info
+    const profileAvatar = document.getElementById("profileAvatar");
+    const profileUsername = document.getElementById("profileUsername");
+    const profileBio = document.getElementById("profileBio");
+    const profileEmail = document.getElementById("profileEmail");
+
+    if (profileAvatar) profileAvatar.src = user.avatar || "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    if (profileUsername) profileUsername.textContent = user.username;
+    if (profileBio) profileBio.textContent = user.bio || "";
+    if (profileEmail) profileEmail.textContent = user.email;
+
+    // 2️⃣ Fetch user's blogs
+    const blogsRes = await fetch(`${API_BASE}/api/blogs/my`, {
+      credentials: "include"
+    });
+
+    if (blogsRes.ok) {
+      const blogsData = await blogsRes.json();
+      renderMyBlogs(blogsData.data || []);
+    } else {
+      renderMyBlogs([]);
+    }
+
   } catch (err) {
-    resetUserInfo();
-    toggleSignIn(true);
+    console.error("Profile load error:", err);
+    // On error, show sign-in section
+    if (signInSection) signInSection.style.display = "block";
+    if (profilePage) profilePage.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
 }
 
-/* =========================
-   LOGIN (EMAIL/PASSWORD)
-========================= */
-classicLoginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
+function renderMyBlogs(blogs) {
+  const container = document.getElementById("myBlogs");
+  container.innerHTML = "";
 
-  const email = document.getElementById("emailInput").value;
-  const password = document.getElementById("passwordInput").value;
-
-  const res = await fetch(`${API_BASE}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include", // 🔥 REQUIRED
-    body: JSON.stringify({ email, password })
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    alert(data.message || "Login failed");
+  if (!blogs.length) {
+    container.innerHTML = "<p>You haven’t written any blogs yet.</p>";
     return;
   }
 
-  alert("Login successful");
-  fetchCurrentUser();
-});
+  blogs.forEach(blog => {
+    const div = document.createElement("div");
+    div.className = "my-blog-card";
+
+    div.innerHTML = `
+      <h4>${blog.title}</h4>
+      <p>${blog.content.slice(0, 120)}...</p>
+      <a href="/html/post.html?id=${blog._id}">View</a>
+      <a href="/html/write.html?editId=${blog._id}">Edit</a>
+      <button data-id="${blog._id}" class="delete-blog">Delete</button>
+    `;
+
+    container.appendChild(div);
+  });
+}
 
 /* =========================
    LOGOUT
 ========================= */
-logoutBtn.addEventListener("click", async () => {
-  await fetch(`${API_BASE}/logout`, {
-    method: "POST",
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await fetch(`${API_BASE}/api/users/logout`, {
+        method: "POST",
+        credentials: "include"
+      });
+
+      // Reload profile to show sign-in section
+      loadProfile();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  });
+}
+
+/* =========================
+   SIGN-IN FORM (in profile page)
+========================= */
+const classicLoginForm = document.getElementById("classicLoginForm");
+if (classicLoginForm) {
+  classicLoginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const emailInput = document.getElementById("emailInput");
+    const passwordInput = document.getElementById("passwordInput");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/users/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          identifier: emailInput.value,
+          password: passwordInput.value
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // Success - reload profile to show logged-in state
+      loadProfile();
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Login error");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", loadProfile);
+
+
+//delete from profile page
+
+document.addEventListener("click", async (e) => {
+  if (!e.target.classList.contains("delete-blog")) return;
+
+  const id = e.target.dataset.id;
+  if (!confirm("Delete this blog?")) return;
+
+  const res = await fetch(`${API_BASE}/api/blogs/${id}`, {
+    method: "DELETE",
     credentials: "include"
   });
 
-  alert("Logged out");
-  resetUserInfo();
-  toggleSignIn(true);
+  if (res.ok) {
+    loadProfile(); // refresh list
+  } else {
+    alert("Delete failed");
+  }
 });
-
-/* =========================
-   ON PAGE LOAD
-========================= */
-fetchCurrentUser();

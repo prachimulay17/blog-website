@@ -7,8 +7,77 @@
   <link rel="stylesheet" href="/css/style.css">
    <link rel="stylesheet" href="/css/footer.css">
    <link rel="stylesheet" href="/css/nav.css">
+   
+
   
 </head>
+
+<div class="auth-modal hidden" id="authModal">
+  <div class="auth-box">
+    <button class="close-btn" id="closeAuth">&times;</button>
+
+    <h3 id="authTitle">Login</h3>
+
+   <form id="authForm">
+
+  <!-- LOGIN ONLY -->
+  <input
+    type="text"
+    id="loginIdentifier"
+    placeholder="Email or Username"
+  />
+
+  <!-- SIGNUP ONLY -->
+  <input
+    type="text"
+    id="signupUsername"
+    placeholder="Username"
+    class="hidden"
+  />
+
+  <input
+    type="email"
+    id="signupEmail"
+    placeholder="Email"
+    class="hidden"
+  />
+
+  <input
+  type="file"
+  id="signupAvatar"
+  accept="image/*"
+  class="hidden"
+/>
+
+
+  <textarea
+    id="signupBio"
+    placeholder="Bio"
+    class="hidden"
+  ></textarea>
+
+  <!-- COMMON -->
+  <input
+    type="password"
+    id="authPassword"
+    placeholder="Password"
+  />
+
+  <button type="submit" class="auth-submit" id="authSubmitBtn">
+    Login
+  </button>
+
+  <p class="auth-switch">
+    <span id="switchText">Don’t have an account?</span>
+    <button type="button" id="switchMode">Signup</button>
+  </p>
+
+</form>
+
+  </div>
+</div>
+
+
 <body>
 
   <header class="navbar">
@@ -22,9 +91,22 @@
     <a href="#">Contact</a>
 
     <!-- Profile icon placed inside nav-links for horizontal alignment -->
-    <a href="/html/profile.html" class="profile-icon" id="profileIcon" title="Your Profile">
-      <img src="https://cdn-icons-png.flaticon.com/512/847/847969.png" alt="Profile Icon"/>
-    </a>
+    <!-- Profile Icon -->
+<div class="profile-wrapper" id="profileWrapper">
+  <img
+    src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+    alt="Profile Icon"
+    id="profileIcon"
+    class="profile-icon"
+  />
+
+  <!-- Dropdown -->
+  <div class="profile-dropdown hidden" id="profileDropdown">
+    <button id="loginBtn">Login</button>
+    <button id="signupBtn">Signup</button>
+  </div>
+</div>
+
   </nav>
 
 </header>
@@ -75,6 +157,11 @@
   </div>
 </footer>
 
-<script src="/javascript/script.js"></script>
+
+<script src="/javascript/config.js"></script>
+<script src="/javascript/auth.js"></script>
+<script src="/javascript/navbar.js"></script>
+<script src="/javascript/home.js"></script>
+
 </body>
 </html>

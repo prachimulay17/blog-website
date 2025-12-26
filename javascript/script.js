@@ -1,6 +1,6 @@
 const hamburger = document.getElementById("hamburger");
 const navLinks = document.getElementById("navLinks");
-const profileIcon = document.getElementById("profileIcon");
+
 const authLinks = document.getElementById("authLinks");
 
 const API_BASE = "http://localhost:8000";
@@ -9,21 +9,121 @@ const API_BASE = "http://localhost:8000";
    NAVBAR INTERACTIONS
 ========================= */
 
-hamburger.addEventListener("click", () => {
-  navLinks.classList.toggle("active");
-  if (!navLinks.classList.contains("active")) {
-    if (authLinks) authLinks.classList.remove("active");
-  }
+const profileIcon = document.getElementById("profileIcon");
+const authModal = document.getElementById("authModal");
+const closeAuth = document.getElementById("closeAuth");
+
+// OPEN modal
+profileIcon.addEventListener("click", () => {
+  authModal.classList.remove("hidden");
 });
 
-document.addEventListener("click", (e) => {
-  if (!navLinks.contains(e.target) && !hamburger.contains(e.target)) {
-    navLinks.classList.remove("active");
+// CLOSE modal
+
+if (closeAuth && authModal) {
+  closeAuth.addEventListener("click", () => {
+    authModal.classList.add("hidden");
+  });
+}
+
+
+// Close on backdrop click
+if (authModal) {
+  authModal.addEventListener("click", (e) => {
+    if (e.target === authModal) {
+      authModal.classList.add("hidden");
+    }
+  });
+  
+}
+
+/* =========================
+   AUTH MODE LOGIC (FIXED)
+========================= */
+
+let isSignup = false;
+
+// Buttons & text
+const switchModeBtn = document.getElementById("switchMode");
+const switchText = document.getElementById("switchText");
+const authTitle = document.getElementById("authTitle");
+const authSubmitBtn = document.getElementById("authSubmitBtn");
+
+// Login fields
+const loginIdentifier = document.getElementById("loginIdentifier");
+
+// Signup fields
+const signupUsername = document.getElementById("signupUsername");
+const signupEmail = document.getElementById("signupEmail");
+const signupAvatar = document.getElementById("signupAvatar");
+const signupBio = document.getElementById("signupBio");
+
+// Common field
+const authPassword = document.getElementById("authPassword");
+
+const signupFields = [
+  signupUsername,
+  signupEmail,
+  signupAvatar,
+  signupBio
+].filter(Boolean); // filter out nulls
+
+function setAuthMode(signup) {
+  isSignup = signup;
+
+  if (loginIdentifier) {
+    loginIdentifier.classList.toggle("hidden", isSignup);
   }
-  if (authLinks && !authLinks.contains(e.target) && !profileIcon.contains(e.target)) {
-    authLinks.classList.remove("active");
+
+  signupFields.forEach(field => {
+    field.classList.toggle("hidden", !isSignup);
+  });
+
+  if (authTitle) authTitle.textContent = isSignup ? "Signup" : "Login";
+  if (authSubmitBtn) authSubmitBtn.textContent = isSignup ? "Signup" : "Login";
+  if (switchText) {
+    switchText.textContent = isSignup
+      ? "Already have an account?"
+      : "Don’t have an account?";
   }
-});
+  if (switchModeBtn) {
+    switchModeBtn.textContent = isSignup ? "Login" : "Signup";
+  }
+}
+setAuthMode(false);
+
+
+// Toggle mode
+if (setAuthMode && switchModeBtn) {
+  switchModeBtn.addEventListener("click", () => {
+    setAuthMode(!isSignup);
+  });
+}
+
+// Prevent reload + debug output
+const authForm = document.getElementById("authForm");
+if (authForm) {
+  authForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+  
+    if (isSignup) {
+      console.log("SIGNUP DATA", {
+        username: signupUsername.value,
+        email: signupEmail.value,
+        avatar: signupAvatar.files[0],
+        bio: signupBio.value,
+        password: authPassword.value
+      });
+    } else {
+      console.log("LOGIN DATA", {
+        identifier: loginIdentifier.value,
+        password: authPassword.value
+      });
+    }
+  });
+}
+
+
 
 /* =========================
    HELPERS
@@ -82,10 +182,12 @@ function renderBlogs(blogs) {
     card.innerHTML = `
       <img src="${blog.coverImage || "/images/image.png"}" alt="Blog">
       <div class="content">
-        <h2>${escapeHtml(blog.title)}</h2>
+       <h2>${escapeHtml(blog.title)}</h2>
+<p class="author">By ${escapeHtml(blog.author?.username || "Unknown")}</p>
+
         <p>${preview}${blog.content.length > 250 ? "..." : ""}</p>
         <a class="read-more" 
-           href="post.html?id=${blog._id}" 
+           href="../html/post.html?id=${blog._id}" 
            data-id="${blog._id}">
           Read More
         </a>
@@ -140,3 +242,5 @@ document.addEventListener("click", async (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   fetchBlogs();
 });
+
+

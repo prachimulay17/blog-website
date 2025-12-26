@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+//const API_BASE = "http://localhost:8000";
 
 
 // Parse query string to get `id`
@@ -16,6 +16,21 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Parse query string to get `id`
+function getQueryParam(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function renderPost() {
   const container = document.getElementById("postContainer");
   if (!container) return;
@@ -27,6 +42,7 @@ async function renderPost() {
   }
 
   try {
+    // 1️⃣ fetch post
     const res = await fetch(`${API_BASE}/api/blogs/${blogId}`);
     const data = await res.json();
 
@@ -39,18 +55,47 @@ async function renderPost() {
     const created = new Date(post.createdAt).toLocaleString();
     const contentHtml = escapeHtml(post.content).replace(/\n/g, "<br>");
 
+    // 2️⃣ check author
+    let isAuthor = false;
+
+    try {
+      const meRes = await fetch(`${API_BASE}/api/users/me`, {
+        credentials: "include"
+      });
+
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        const me = meData.data;
+
+        isAuthor =
+          me &&
+          post.author &&
+          String(me._id) === String(post.author._id);
+      }
+    } catch (err) {
+      console.error("Failed to check author", err);
+    }
+
+    // 3️⃣ render HTML
     container.innerHTML = `
       <article class="blog-card single-post-card">
         <div class="content">
           <h1>${escapeHtml(post.title)}</h1>
+
           <p class="meta">
-            by ${escapeHtml(post.author.username)} · ${created}
+            by ${escapeHtml(post.author?.username || "Unknown")} · ${created}
           </p>
 
-          <div class="post-actions">
-            <a href="write.html?editId=${post._id}" class="edit-post">Edit</a>
-            <a href="#" class="delete-post" data-id="${post._id}">Delete</a>
-          </div>
+          ${
+            isAuthor
+              ? `
+            <div class="post-actions">
+              <a href="write.html?editId=${post._id}" class="edit-post">Edit</a>
+              <a href="#" class="delete-post" data-id="${post._id}">Delete</a>
+            </div>
+            `
+              : ""
+          }
 
           <div class="post-body">${contentHtml}</div>
         </div>
@@ -62,9 +107,10 @@ async function renderPost() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', renderPost);
+/* =========================
+   DELETE HANDLER
+========================= */
 
-// Handle delete from single post view
 document.addEventListener("click", async (e) => {
   const t = e.target;
   if (!t || !t.classList) return;
@@ -80,7 +126,7 @@ document.addEventListener("click", async (e) => {
     try {
       const res = await fetch(`${API_BASE}/api/blogs/${blogId}`, {
         method: "DELETE",
-        credentials: "include" // 🔥 REQUIRED (auth)
+        credentials: "include"
       });
 
       const data = await res.json();
@@ -99,3 +145,10 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+  renderPost();
+});

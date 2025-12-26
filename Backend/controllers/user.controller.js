@@ -62,24 +62,50 @@ const registeruser = asyncHandeler(async (req, res) => {
     );
   }
 
-  // 7️⃣ Response
+  // 7️⃣ Auto-login: Generate tokens after successful registration
+  const accessToken = await user.generateAccessToken();
+  const refreshToken = await user.generateRefreshToken();
+
+  // 8️⃣ Save refresh token
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  // 9️⃣ Cookie options (same as login)
+  const cookieOptions = {
+    httpOnly: true,
+    secure: false, // 🔥 MUST be false on localhost
+    path: "/"
+    // Note: sameSite not set for localhost cross-origin
+  };
+
+  // 🔟 Response with cookies set
   return res
     .status(201)
-    .json(new ApiResponse(201, "User registered successfully", createduser));
+    .cookie("accessToken", accessToken, cookieOptions)
+    .cookie("refreshToken", refreshToken, cookieOptions)
+    .json(new ApiResponse(201, "User registered and logged in successfully", {
+      user: {
+        _id: createduser._id,
+        username: createduser.username,
+        email: createduser.email,
+        avatar: createduser.avatar,
+        bio: createduser.bio
+      }
+    }));
 });
 
 
 const loginUser = asyncHandeler(async (req, res) => {
-  const { username,email, password } = req.body;
+  const { identifier, password } = req.body;
 
   // 1️⃣ validation
-  if ((!email && !username) || !password) {
-    throw new ApiError(400, "Email or username and password are required");
+  if (!identifier || !password) {
+    throw new ApiError(400, "Identifier and password are required");
   }
 
-  // 2️⃣ find user
+  // 2️⃣ find user by email or username
   const user = await User.findOne({
-    $or: [{ email }, { username }]
+    $or: [{ email: identifier }, { username: identifier }]
   });
 
   if (!user) {
@@ -96,17 +122,21 @@ const loginUser = asyncHandeler(async (req, res) => {
   // 4️⃣ generate tokens
   const accessToken = await user.generateAccessToken();
   const refreshToken = await user.generateRefreshToken();
-
+if(!accessToken || !refreshToken){
+  throw new ApiError(500, "Token generation failed");
+}
   // 5️⃣ save refresh token
   user.refreshToken = refreshToken;
   await user.save({ validateBeforeSave: false });
 
   // 6️⃣ cookie options
   const cookieOptions = {
-  httpOnly: true,
-  secure: false, // 🔥 MUST be false on localhost
-  sameSite: "lax"
-};
+    httpOnly: true,
+    secure: false, // 🔥 MUST be false on localhost
+    path: "/",
+    sameSite: "lax",
+    
+  };
 
 
   // 7️⃣ send response
@@ -139,10 +169,11 @@ const logoutUser = asyncHandeler(async (req, res) => {
   );
 
   const cookieOptions = {
-  httpOnly: true,
-  secure: false, // 🔥 MUST be false on localhost
-  sameSite: "lax"
-};
+    httpOnly: true,
+    secure: false, // 🔥 MUST be false on localhost
+    path: "/"
+    // Note: sameSite not set for localhost cross-origin
+  };
 
 
   return res
@@ -186,10 +217,11 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const cookieOptions = {
-  httpOnly: true,
-  secure: false, // 🔥 MUST be false on localhost
-  sameSite: "lax"
-};
+    httpOnly: true,
+    secure: false, // 🔥 MUST be false on localhost
+    path: "/"
+    // Note: sameSite not set for localhost cross-origin
+  };
 
   return res
     .status(200)
@@ -269,10 +301,11 @@ const deleteUser = asyncHandeler(async (req, res) => {
   }
 
   const cookieOptions = {
-  httpOnly: true,
-  secure: false, // 🔥 MUST be false on localhost
-  sameSite: "lax"
-};
+    httpOnly: true,
+    secure: false, // 🔥 MUST be false on localhost
+    path: "/"
+    // Note: sameSite not set for localhost cross-origin
+  };
 
 
   return res

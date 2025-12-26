@@ -46,7 +46,7 @@ const getAllBlogs = asyncHandeler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, blogs,"Blogs fetched successfully"));
+    .json(new ApiResponse(200,"Blogs fetched successfully",blogs));
 });
 
 
@@ -180,9 +180,19 @@ const searchBlogs = asyncHandeler(async (req, res) => {
   const blogs = await blogsQuery;
 
   return res.status(200).json(
-    new ApiResponse(200, blogs,"Search results fetched successfully")
+    new ApiResponse(200,"Search results fetched successfully", blogs)
   );
 });
 
 
-export { createBlog, getAllBlogs , getBlogById, updateBlog , deleteBlog,searchBlogs};
+const getMyBlogs = asyncHandeler(async (req, res) => {
+  const blogs = await Blog.find({ author: req.user._id })
+    .sort({ createdAt: -1 });
+
+  return res.status(200).json(
+    new ApiResponse(200, "My blogs fetched", blogs)
+  );
+});
+
+
+export { createBlog, getAllBlogs , getBlogById, updateBlog , deleteBlog,searchBlogs,getMyBlogs};
