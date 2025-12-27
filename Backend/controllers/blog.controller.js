@@ -16,12 +16,14 @@ const createBlog = asyncHandeler(async (req, res) => {
 
   let coverImageUrl = "";
   const coverLocalPath = req.files?.coverImage?.[0]?.path;
+ 
 
   if (coverLocalPath) {
     const cover = await uploadoncloudinary(coverLocalPath);
     if (!cover) {
       throw new ApiError(500, "Cover image upload failed");
     }
+    
     coverImageUrl = cover.secure_url;
   }
 

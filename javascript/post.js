@@ -120,8 +120,11 @@ document.addEventListener("click", async (e) => {
 
     const blogId = t.getAttribute("data-id");
     if (!blogId) return;
+   
+
 
     if (!confirm("Delete this post? This cannot be undone.")) return;
+     console.log("DELETE CLICKED", blogId);
 
     try {
       const res = await fetch(`${API_BASE}/api/blogs/${blogId}`, {

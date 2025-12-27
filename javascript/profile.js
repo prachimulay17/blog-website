@@ -98,6 +98,9 @@ if (logoutBtn) {
         credentials: "include"
       });
 
+      window.location.href = "index.html";  
+      alert("Logged out successfully");
+
       // Reload profile to show sign-in section
       loadProfile();
     } catch (err) {

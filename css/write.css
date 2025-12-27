@@ -100,3 +100,34 @@ body {
 a {
   text-decoration: none;
 }
+
+
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 14px;
+}
+
+.form-group input[type="file"] {
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px dashed var(--mid);
+  background-color: #faf7fc;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.form-group input[type="file"]:hover {
+  border-color: var(--dark);
+  background-color: #f3ecf8;
+}

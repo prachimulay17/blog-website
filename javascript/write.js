@@ -1,8 +1,16 @@
 const API_BASE = "http://localhost:8000";
 
-// elements (MATCH YOUR HTML)
+
+console.log("write.js loaded");
+
+const form = document.getElementById("writeForm");
+console.log("FORM:", form);
+
+// elements
+
 const titleInput = document.getElementById("title");
 const contentInput = document.getElementById("content");
+const coverInput = document.getElementById("coverImage");
 const postBtn = document.getElementById("postBtn");
 
 // check edit mode
@@ -21,6 +29,9 @@ async function loadBlogForEdit() {
       credentials: "include"
     });
 
+    
+
+
     const data = await res.json();
 
     if (!res.ok) {
@@ -32,67 +43,57 @@ async function loadBlogForEdit() {
     titleInput.value = blog.title;
     contentInput.value = blog.content;
 
-    postBtn.textContent = "Update";
+    postBtn.textContent = "Update Blog";
   } catch (err) {
     console.error(err);
     alert("Error loading blog");
   }
 }
 
+
+document.addEventListener("DOMContentLoaded", loadBlogForEdit);
 /* =========================
    CREATE / UPDATE BLOG
 ========================= */
 
-postBtn.addEventListener("click", async () => {
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
   const title = titleInput.value.trim();
   const content = contentInput.value.trim();
 
-  if (!title || !content) {
-    alert("Title and content are required");
+  if (title.length < 3) {
+    alert("Title must be at least 3 characters long");
     return;
   }
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("content", content);
-  // coverImage optional
-  // formData.append("coverImage", fileInput.files[0]);
-
-  const isEdit = Boolean(editId);
-  const url = isEdit
-    ? `${API_BASE}/api/blogs/${editId}`
-    : `${API_BASE}/api/blogs`;
-
-  const method = isEdit ? "PATCH" : "POST";
+  const formData = new FormData(form);
 
   try {
-    const res = await fetch(url, {
-      method,
-      credentials: "include", // 🔐 REQUIRED
-      body: formData          // 🔥 REQUIRED
+    const res = await fetch(`${API_BASE}/api/blogs`, {
+      method: "POST",
+      credentials: "include",
+      body: formData
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      alert(data.message || "Failed to save blog");
+      alert(data.message || "Failed to publish blog");
       return;
     }
 
-    alert(isEdit ? "Blog updated successfully" : "Blog published successfully");
-    window.location.href = "index.html";
+    alert("Blog published successfully");
+
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 300);
+
   } catch (err) {
-    console.error(err);
-    alert("Something went wrong");
+    console.error("FETCH ERROR:", err);
+    alert("Network error");
   }
 });
 
-
-/* =========================
-   INIT
-========================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-  loadBlogForEdit();
-});
 
