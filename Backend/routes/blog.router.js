@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createBlog,getAllBlogs,getBlogById,updateBlog,deleteBlog,searchBlogs,getMyBlogs } from "../controllers/blog.controller.js";
+import { createBlog,getAllBlogs,getBlogById,updateBlog,deleteBlog,searchBlogs,getMyBlogs} from "../controllers/blog.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -20,7 +20,7 @@ router.route("/:blogId").get(getBlogById);
 router.route("/:blogId").patch(verifyJWT,upload.fields([{ name: "coverImage", maxCount: 1 }]),updateBlog);
 router.route("/:blogId").delete(verifyJWT,deleteBlog);
 
-router.get("/my",verifyJWT, getMyBlogs);
+router.route("/user/:userId").get(verifyJWT,getMyBlogs);
 
 
 export default router;

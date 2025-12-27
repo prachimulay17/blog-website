@@ -15,7 +15,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files
-app.use(express.static("../")); // Serve files from parent directory
+app.use(express.static("public"));
+ // Serve files from parent directory
 
 app.use("/api/users", userRouter); // 🔥 REQUIRED
 app.use("/api/blogs", blogRouter); // 🔥 REQUIRED

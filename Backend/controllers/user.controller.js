@@ -319,6 +319,7 @@ const deleteUser = asyncHandeler(async (req, res) => {
 
 
 
-export { registeruser, loginUser,logoutUser, refreshAccessToken, getCurrentUser, updateUser,deleteUser };
+
+export { registeruser, loginUser,logoutUser, refreshAccessToken, getCurrentUser, updateUser,deleteUser};
 
 

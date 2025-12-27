@@ -1,171 +1,98 @@
 const API_BASE = "http://localhost:8000";
 
-// Elements for auth state management
-const signInSection = document.querySelector(".sign-in-section");
-const profilePage = document.querySelector(".profile-page");
-const logoutBtn = document.getElementById("logoutBtn");
-
-/* =========================
-   LOAD PROFILE (PROTECTED)
-========================= */
+/* ======================
+   LOAD CURRENT USER
+====================== */
 async function loadProfile() {
-  try {
-    // 1️⃣ Get logged-in user
-    const meRes = await fetch(`${API_BASE}/api/users/me`, {
-      credentials: "include"
-    });
+  const res = await fetch(`${API_BASE}/api/users/me`, {
+    credentials: "include"
+  });
 
-    if (!meRes.ok) {
-      // ❌ Not logged in - show sign-in section, hide profile page
-      if (signInSection) signInSection.style.display = "block";
-      if (profilePage) profilePage.style.display = "none";
-      if (logoutBtn) logoutBtn.style.display = "none";
-      return;
-    }
+  if (!res.ok) return;
 
-    // ✅ Logged in - show profile page, hide sign-in section
-    if (signInSection) signInSection.style.display = "none";
-    if (profilePage) profilePage.style.display = "block";
-    if (logoutBtn) logoutBtn.style.display = "block";
+  const { data } = await res.json();
 
-    const { data: user } = await meRes.json();
+  document.getElementById("profileName").textContent = data.username;
+  document.getElementById("profileEmail").textContent = data.email;
+  document.getElementById("profileAvatar").src =
+    data.avatar || "/images/default-avatar.png";
 
-    // Update profile info
-    const profileAvatar = document.getElementById("profileAvatar");
-    const profileUsername = document.getElementById("profileUsername");
-    const profileBio = document.getElementById("profileBio");
-    const profileEmail = document.getElementById("profileEmail");
-
-    if (profileAvatar) profileAvatar.src = user.avatar || "https://cdn-icons-png.flaticon.com/512/847/847969.png";
-    if (profileUsername) profileUsername.textContent = user.username;
-    if (profileBio) profileBio.textContent = user.bio || "";
-    if (profileEmail) profileEmail.textContent = user.email;
-
-    // 2️⃣ Fetch user's blogs
-    const blogsRes = await fetch(`${API_BASE}/api/blogs/my`, {
-      credentials: "include"
-    });
-
-    if (blogsRes.ok) {
-      const blogsData = await blogsRes.json();
-      renderMyBlogs(blogsData.data || []);
-    } else {
-      renderMyBlogs([]);
-    }
-
-  } catch (err) {
-    console.error("Profile load error:", err);
-    // On error, show sign-in section
-    if (signInSection) signInSection.style.display = "block";
-    if (profilePage) profilePage.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "none";
-  }
+  loadUserBlogs(data._id);
 }
 
-function renderMyBlogs(blogs) {
-  const container = document.getElementById("myBlogs");
+/* ======================
+   FETCH USER BLOGS
+====================== */
+async function loadUserBlogs(userId) {
+  const res = await fetch(`${API_BASE}/api/blogs/user/${userId}`, {
+    credentials: "include"
+  });
+
+  const data = await res.json();
+  const container = document.getElementById("userBlogs");
+
   container.innerHTML = "";
 
-  if (!blogs.length) {
-    container.innerHTML = "<p>You haven’t written any blogs yet.</p>";
+  if (!data.data.length) {
+    container.innerHTML = "<p>You haven't written any blogs yet.</p>";
     return;
   }
 
-  blogs.forEach(blog => {
+  data.data.forEach((blog) => {
     const div = document.createElement("div");
-    div.className = "my-blog-card";
+    div.className = "blog-item";
 
     div.innerHTML = `
       <h4>${blog.title}</h4>
-      <p>${blog.content.slice(0, 120)}...</p>
-      <a href="/html/post.html?id=${blog._id}">View</a>
-      <a href="/html/write.html?editId=${blog._id}">Edit</a>
-      <button data-id="${blog._id}" class="delete-blog">Delete</button>
+      <button onclick="editBlog('${blog._id}')">Edit</button>
     `;
 
     container.appendChild(div);
   });
 }
 
-/* =========================
-   LOGOUT
-========================= */
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      await fetch(`${API_BASE}/api/users/logout`, {
-        method: "POST",
-        credentials: "include"
-      });
-
-      window.location.href = "index.html";  
-      alert("Logged out successfully");
-
-      // Reload profile to show sign-in section
-      loadProfile();
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  });
+function editBlog(id) {
+  window.location.href = `/html/write.html?editId=${id}`;
 }
 
-/* =========================
-   SIGN-IN FORM (in profile page)
-========================= */
-const classicLoginForm = document.getElementById("classicLoginForm");
-if (classicLoginForm) {
-  classicLoginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+/* ======================
+   AVATAR UPLOAD
+====================== */
+document.getElementById("avatarInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    const emailInput = document.getElementById("emailInput");
-    const passwordInput = document.getElementById("passwordInput");
+  const formData = new FormData();
+  formData.append("avatar", file);
 
-    try {
-      const res = await fetch(`${API_BASE}/api/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          identifier: emailInput.value,
-          password: passwordInput.value
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Login failed");
-        return;
-      }
-
-      // Success - reload profile to show logged-in state
-      loadProfile();
-    } catch (err) {
-      console.error("Login error:", err);
-      alert("Login error");
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", loadProfile);
-
-
-//delete from profile page
-
-document.addEventListener("click", async (e) => {
-  if (!e.target.classList.contains("delete-blog")) return;
-
-  const id = e.target.dataset.id;
-  if (!confirm("Delete this blog?")) return;
-
-  const res = await fetch(`${API_BASE}/api/blogs/${id}`, {
-    method: "DELETE",
+  const res = await fetch(`${API_BASE}/api/users/avatar`, {
+    method: "PATCH",
+    body: formData,
     credentials: "include"
   });
 
+  const data = await res.json();
+
   if (res.ok) {
-    loadProfile(); // refresh list
+    document.getElementById("profileAvatar").src = data.data.avatar;
   } else {
-    alert("Delete failed");
+    alert("Avatar upload failed");
   }
 });
+
+/* ======================
+   LOGOUT
+====================== */
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  await fetch(`${API_BASE}/api/users/logout`, {
+    method: "POST",
+    credentials: "include"
+  });
+
+  window.location.href = "/index.html";
+});
+
+/* ======================
+   INIT
+====================== */
+document.addEventListener("DOMContentLoaded", loadProfile);
