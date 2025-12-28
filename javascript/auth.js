@@ -134,6 +134,7 @@ authForm.addEventListener("submit", async (e) => {
       // success
       document.getElementById("authModal").classList.add("hidden");
       await loadCurrentUser();
+      alert("user logged in!");
     } else {
       // SIGNUP LOGIC
       const formData = new FormData();

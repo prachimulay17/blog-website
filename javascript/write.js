@@ -88,7 +88,7 @@ form.addEventListener("submit", async (e) => {
 
     setTimeout(() => {
       window.location.href = "index.html";
-    }, 400);
+    }, 600);
 
   } catch (err) {
     console.error("FETCH ERROR:", err);

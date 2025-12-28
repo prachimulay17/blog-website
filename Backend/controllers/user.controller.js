@@ -235,10 +235,18 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
 });
 
 const getCurrentUser = asyncHandeler(async (req, res) => {
-  return res.status(200).json(
-    new ApiResponse(200, "User fetched", req.user)
+  console.log("REQ.USER:", req.user);
+
+  const user = await User.findById(req.user._id)
+    .select("-password -refreshToken");
+
+  console.log("DB USER:", user);
+
+  res.status(200).json(
+    new ApiResponse(200,"User fetched", user)
   );
 });
+
 
 const updateUser = asyncHandeler(async (req, res) => {
   const userId = req.user._id;
@@ -320,6 +328,6 @@ const deleteUser = asyncHandeler(async (req, res) => {
 
 
 
-export { registeruser, loginUser,logoutUser, refreshAccessToken, getCurrentUser, updateUser,deleteUser};
+export { registeruser, loginUser,logoutUser, refreshAccessToken,getCurrentUser, updateUser,deleteUser};
 
 

@@ -187,6 +187,9 @@ const searchBlogs = asyncHandeler(async (req, res) => {
 });
 
 
+
+
+
 const getMyBlogs = asyncHandeler(async (req, res) => {
   const blogs = await Blog.find({ author: req.user._id })
     .sort({ createdAt: -1 });

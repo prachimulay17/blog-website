@@ -1,54 +1,139 @@
 const API_BASE = "http://localhost:8000";
 
 /* ======================
-   LOAD CURRENT USER
+   DOM ELEMENTS
 ====================== */
-async function loadProfile() {
-  const res = await fetch(`${API_BASE}/api/users/me`, {
-    credentials: "include"
-  });
+const loginPage = document.getElementById("loginPage");
+const profilePage = document.getElementById("profilePage");
 
-  if (!res.ok) return;
+const profileName = document.getElementById("profileName");
+const profileEmail = document.getElementById("profileEmail");
+const profileAvatar = document.getElementById("profilePic");
 
-  const { data } = await res.json();
+const logoutBtn = document.getElementById("logoutBtn");
 
-  document.getElementById("profileName").textContent = data.username;
-  document.getElementById("profileEmail").textContent = data.email;
-  document.getElementById("profileAvatar").src =
-    data.avatar || "/images/default-avatar.png";
+const editBtn = document.getElementById("editBtn");
+const editForm = document.getElementById("editForm");
+const editUsername = document.getElementById("editUsername");
+const editEmail = document.getElementById("editEmail");
+const editAvatar = document.getElementById("editAvatar");
+const cancelBtn = document.getElementById("cancelBtn");
 
-  loadUserBlogs(data._id);
+const avatarInput = document.getElementById("avatarInput");
+
+/* ======================
+   AUTH CHECK (BOOTSTRAP)
+====================== */
+document.addEventListener("DOMContentLoaded", () => {
+  checkAuth();
+});
+
+async function checkAuth() {
+  try {
+    const res = await fetch(`${API_BASE}/api/users/me`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    if (!res.ok) throw new Error("Not logged in");
+
+    const { data } = await res.json();
+    showProfile();
+    populateProfile(data);
+  } catch (err) {
+    console.error("Auth check failed:", err);
+    showLogin();
+  }
+}
+
+/* ======================
+   UI HELPERS
+====================== */
+function showProfile() {
+  if (loginPage) loginPage.style.display = "none";
+  if (profilePage) profilePage.style.display = "block";
+}
+
+function showLogin() {
+  if (loginPage) loginPage.style.display = "block";
+  if (profilePage) profilePage.style.display = "none";
+}
+
+/* ======================
+   POPULATE PROFILE
+====================== */
+function populateProfile(user) {
+  profileName.textContent = user.username;
+  profileEmail.textContent = user.email;
+  profileAvatar.src = user.avatar || "/images/default-avatar.png";
+  console.log("current img src:", user.avatar);
+  console.log("current img src:", profileAvatar.src);
+
+  loadUserBlogs(user._id);
 }
 
 /* ======================
    FETCH USER BLOGS
 ====================== */
 async function loadUserBlogs(userId) {
-  const res = await fetch(`${API_BASE}/api/blogs/user/${userId}`, {
-    credentials: "include"
-  });
-
-  const data = await res.json();
   const container = document.getElementById("userBlogs");
+  const title = container.querySelector(".blogs-title");
 
-  container.innerHTML = "";
+  try {
+    const res = await fetch(`${API_BASE}/api/blogs/user/${userId}`, {
+      credentials: "include"
+    });
 
-  if (!data.data.length) {
-    container.innerHTML = "<p>You haven't written any blogs yet.</p>";
-    return;
+    if (!res.ok) {
+      throw new Error("Failed to load blogs");
+    }
+
+    const { data } = await res.json();
+
+    // Clear existing content but keep title
+    container.innerHTML = "";
+    if (title) container.appendChild(title);
+
+    if (!data || !data.length) {
+      const emptyMsg = document.createElement("p");
+      emptyMsg.className = "no-blogs-message";
+      emptyMsg.textContent = "You haven't written any blogs yet.";
+      emptyMsg.style.textAlign = "center";
+      emptyMsg.style.color = "#5E548E";
+      emptyMsg.style.padding = "20px 0";
+      container.appendChild(emptyMsg);
+      return;
+    }
+
+    // Create blog items securely (no innerHTML to prevent XSS)
+    data.forEach((blog) => {
+      const div = document.createElement("div");
+      div.className = "blog-item";
+
+      const h4 = document.createElement("h4");
+      h4.textContent = blog.title; // textContent auto-escapes HTML
+
+      const btn = document.createElement("button");
+      btn.textContent = "Edit";
+      btn.addEventListener("click", () => editBlog(blog._id));
+
+      div.appendChild(h4);
+      div.appendChild(btn);
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("Error loading blogs:", err);
+    container.innerHTML = "";
+    if (title) container.appendChild(title);
+    
+    const errorMsg = document.createElement("p");
+    errorMsg.className = "error-message";
+    errorMsg.textContent = "Error loading blogs. Please try again later.";
+    errorMsg.style.textAlign = "center";
+    errorMsg.style.color = "#d32f2f";
+    errorMsg.style.padding = "20px 0";
+    container.appendChild(errorMsg);
   }
-
-  data.data.forEach((blog) => {
-    const div = document.createElement("div");
-    div.className = "blog-item";
-
-    div.innerHTML = `
-      <h4>${blog.title}</h4>
-      <button onclick="editBlog('${blog._id}')">Edit</button>
-    `;
-
-    container.appendChild(div);
-  });
 }
 
 function editBlog(id) {
@@ -56,43 +141,164 @@ function editBlog(id) {
 }
 
 /* ======================
-   AVATAR UPLOAD
+   AVATAR PREVIEW (EDIT)
 ====================== */
-document.getElementById("avatarInput").addEventListener("change", async (e) => {
+editAvatar?.addEventListener("change", () => {
+  const file = editAvatar.files[0];
+  if (!file) return;
+
+  // Revoke previous object URL to prevent memory leak
+  if (profileAvatar.dataset.objectUrl) {
+    URL.revokeObjectURL(profileAvatar.dataset.objectUrl);
+  }
+
+  const previewURL = URL.createObjectURL(file);
+  profileAvatar.dataset.objectUrl = previewURL;
+  profileAvatar.src = previewURL;
+});
+
+/* ======================
+   AVATAR UPLOAD (DIRECT)
+====================== */
+avatarInput?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
   const formData = new FormData();
   formData.append("avatar", file);
 
-  const res = await fetch(`${API_BASE}/api/users/avatar`, {
-    method: "PATCH",
-    body: formData,
-    credentials: "include"
-  });
+  try {
+    const res = await fetch(`${API_BASE}/api/users/avatar`, {
+      method: "PATCH",
+      body: formData,
+      credentials: "include"
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (res.ok) {
-    document.getElementById("profileAvatar").src = data.data.avatar;
-  } else {
-    alert("Avatar upload failed");
+    if (res.ok) {
+      profileAvatar.src = data.data.avatar;
+    } else {
+      alert(data.message || "Avatar upload failed");
+    }
+  } catch (err) {
+    console.error("Avatar upload error:", err);
+    alert("Failed to upload avatar. Please try again.");
+  }
+});
+
+/* ======================
+   EDIT PROFILE TOGGLE
+====================== */
+editBtn?.addEventListener("click", () => {
+  editForm.style.display = "block";
+  editBtn.style.display = "none";
+
+  editUsername.value = profileName.textContent;
+  editEmail.value = profileEmail.textContent;
+});
+
+cancelBtn?.addEventListener("click", () => {
+  editForm.style.display = "none";
+  editBtn.style.display = "";
+
+  // Clear file input
+  if (editAvatar) editAvatar.value = "";
+  
+  // Revoke object URL if exists
+  if (profileAvatar.dataset.objectUrl) {
+    URL.revokeObjectURL(profileAvatar.dataset.objectUrl);
+    delete profileAvatar.dataset.objectUrl;
+  }
+});
+
+/* ======================
+   UPDATE PROFILE
+====================== */
+editForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  // Disable buttons during submission
+  const saveBtn = editForm.querySelector(".save-btn");
+  const originalText = saveBtn.textContent;
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+  cancelBtn.disabled = true;
+
+  try {
+    const formData = new FormData();
+    formData.append("username", editUsername.value);
+    formData.append("email", editEmail.value);
+
+    if (editAvatar.files[0]) {
+      formData.append("avatar", editAvatar.files[0]);
+    }
+
+    const res = await fetch(`${API_BASE}/api/users/update`, {
+      method: "PATCH",
+      credentials: "include",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.message || "Update failed");
+      return;
+    }
+
+    // Update UI with new data
+    profileName.textContent = data.data.username;
+    profileEmail.textContent = data.data.email;
+    profileAvatar.src = data.data.avatar || profileAvatar.src;
+
+    // Clean up object URL
+    if (profileAvatar.dataset.objectUrl) {
+      URL.revokeObjectURL(profileAvatar.dataset.objectUrl);
+      delete profileAvatar.dataset.objectUrl;
+    }
+
+    // Hide form and show edit button
+    editForm.style.display = "none";
+    editBtn.style.display = "";
+    
+    // Clear file input
+    if (editAvatar) editAvatar.value = "";
+  } catch (err) {
+    console.error("Profile update error:", err);
+    alert("Failed to update profile. Please try again.");
+  } finally {
+    // Re-enable buttons
+    saveBtn.disabled = false;
+    saveBtn.textContent = originalText;
+    cancelBtn.disabled = false;
   }
 });
 
 /* ======================
    LOGOUT
 ====================== */
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  await fetch(`${API_BASE}/api/users/logout`, {
-    method: "POST",
-    credentials: "include"
-  });
+logoutBtn?.addEventListener("click", async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/users/logout`, {
+      method: "POST",
+      credentials: "include"
+    });
 
-  window.location.href = "/index.html";
+    if (!res.ok) {
+      console.error("Logout request failed");
+    }
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    // Always redirect to login, even if API fails
+    // Clear any cached data
+    if (profileAvatar.dataset.objectUrl) {
+      URL.revokeObjectURL(profileAvatar.dataset.objectUrl);
+    }
+    
+    // Redirect to login page
+    window.location.href = "/html/index.html";
+    alert("user logged out successfully");
+  }
 });
-
-/* ======================
-   INIT
-====================== */
-document.addEventListener("DOMContentLoaded", loadProfile);

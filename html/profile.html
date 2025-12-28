@@ -3,33 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PurpleBlog Profile</title>
-  <link rel="stylesheet" href="/css/profile.css" />
+  <title>PurpleBlog | Profile</title>
+  <link rel="stylesheet" href="/css/profile.css">
 </head>
-<div class="profile-container">
-  <div class="profile-header">
-    <div class="profile-avatar">
-      <img id="profileAvatar" src="/images/default-avatar.png" />
-      <label class="avatar-upload">
-        ✎
-        <input type="file" id="avatarInput" hidden />
-      </label>
+<body>
+
+  <div id="profilePage" class="profile-layout" style="display:none">
+
+    <!-- PROFILE CARD -->
+    <div class="profile-card">
+      <img
+        id="profilePic"
+        src="/images/default-avatar.png"
+        alt="Avatar"
+        class="avatar"
+      />
+
+      <h2 id="profileName">Your Name</h2>
+      <p id="profileEmail">your@email.com</p>
+
+      <div class="buttons">
+        <button id="editBtn" class="edit-btn">Edit Profile</button>
+         <button id="logoutBtn" class="logout-btn">Logout</button> 
+      </div>
+
+
+      <form id="editForm" class="edit-form" style="display:none">
+        <label>
+          Username
+          <input type="text" id="editUsername" />
+        </label>
+
+        <label>
+          Email
+          <input type="email" id="editEmail" />
+        </label>
+
+        <label class="avatar-label">
+          Change Avatar
+          <input type="file" id="editAvatar" accept="image/*" hidden />
+        </label>
+
+        <div class="form-actions">
+          <button type="submit" class="save-btn">Save</button>
+          <button type="button" id="cancelBtn" class="cancel-btn">Cancel</button>
+        </div>
+      </form>
     </div>
 
-    <div class="profile-info">
-      <h2 id="profileName">Username</h2>
-      <p id="profileEmail">email@example.com</p>
+    <!-- BLOGS CARD -->
+    <div id="userBlogs" class="blogs-card">
+      <h3 class="blogs-title">My Blogs</h3>
+      <!-- blogs injected by JS -->
     </div>
+
   </div>
 
-  <div class="profile-blogs">
-    <h3>Your Blogs</h3>
-    <div id="userBlogs"></div>
-  </div>
-
-  <button class="logout-btn" id="logoutBtn">Logout</button>
-</div>
-
-<script src="/javascript/profile.js"></script>
-
+  <script src="/javascript/profile.js"></script>
+</body>
 </html>
