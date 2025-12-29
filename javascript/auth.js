@@ -1,5 +1,4 @@
 
-API_BASE = "https://blog-website-3jb5.onrender.com";
 let isSignup = false;
 
 const authForm = document.getElementById("authForm");
@@ -64,14 +63,23 @@ switchModeBtn.addEventListener("click", () => {
 // Global auth state
 window.currentUser = null;
 let isLoadingUser = false;
+let lastAuthCheck = 0;
+const AUTH_CACHE_DURATION = 30000; // 30 seconds cache
 
-window.loadCurrentUser = async function loadCurrentUser() {
+window.loadCurrentUser = async function loadCurrentUser(retryCount = 0, forceRefresh = false) {
+  // Check cache first - if we have recent auth data, return it (unless force refresh requested)
+  const now = Date.now();
+  if (!forceRefresh && window.currentUser && (now - lastAuthCheck) < AUTH_CACHE_DURATION) {
+    return window.currentUser;
+  }
+
   // Prevent multiple concurrent calls
   if (isLoadingUser) {
     return window.currentUser;
   }
 
   isLoadingUser = true;
+  const maxRetries = 2;
 
   try {
     const res = await fetch(`${API_BASE}/api/users/me`, {
@@ -88,22 +96,52 @@ window.loadCurrentUser = async function loadCurrentUser() {
     }
 
     if (!res.ok) {
-      // Other non-401 errors should still be logged
-      console.error(`loadCurrentUser failed with status ${res.status}`);
+      // Other non-401 errors - retry up to maxRetries times
+      if (retryCount < maxRetries) {
+        console.warn(`loadCurrentUser failed with status ${res.status}, retrying... (${retryCount + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+        isLoadingUser = false; // Reset loading flag for retry
+        return loadCurrentUser(retryCount + 1);
+      }
+
+      // Max retries reached - show user-friendly error
+      console.error(`loadCurrentUser failed after ${maxRetries} retries with status ${res.status}`);
       window.currentUser = null;
       updateLoggedOutUI();
+
+      // Show user feedback only on pages that need authentication
+      if (window.location.pathname.includes('profile') || window.location.pathname.includes('write')) {
+        alert("Unable to verify your session. Please try logging in again.");
+        window.location.href = "/html/index.html";
+      }
+
       return null;
     }
 
     const data = await res.json();
     window.currentUser = data.data;
+    lastAuthCheck = Date.now(); // Update cache timestamp
     updateLoggedInUI(window.currentUser);
     return window.currentUser;
   } catch (err) {
-    // Network errors, etc.
-    console.error("loadCurrentUser network error", err);
+    // Network errors - retry logic
+    if (retryCount < maxRetries) {
+      console.warn(`loadCurrentUser network error, retrying... (${retryCount + 1}/${maxRetries})`, err);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      isLoadingUser = false; // Reset loading flag for retry
+      return loadCurrentUser(retryCount + 1);
+    }
+
+    // Max retries reached for network errors
+    console.error("loadCurrentUser network error after retries", err);
     window.currentUser = null;
     updateLoggedOutUI();
+
+    // Show user feedback for network errors on critical pages
+    if (window.location.pathname.includes('profile') || window.location.pathname.includes('write')) {
+      alert("Network error. Please check your connection and try again.");
+    }
+
     return null;
   } finally {
     isLoadingUser = false;
@@ -136,9 +174,12 @@ authForm.addEventListener("submit", async (e) => {
         return;
       }
 
-      // success
+      // success - wait for cookies to be set before checking auth
       document.getElementById("authModal").classList.add("hidden");
-      await loadCurrentUser();
+
+      // Small delay to ensure cookies are properly set
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await loadCurrentUser(0, true); // Force refresh after login
       alert("user logged in!");
     } else {
       // SIGNUP LOGIC
@@ -169,8 +210,11 @@ authForm.addEventListener("submit", async (e) => {
          alert(isSignup ? "user registered successfully" : "user logged in");
 
       document.getElementById("authModal").classList.add("hidden");
-      await loadCurrentUser();
-     
+
+      // Small delay to ensure cookies are properly set
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await loadCurrentUser(0, true); // Force refresh after signup
+
     }
       
     }
