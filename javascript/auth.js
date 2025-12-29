@@ -1,3 +1,5 @@
+
+
 let isSignup = false;
 
 const authForm = document.getElementById("authForm");
@@ -112,6 +114,7 @@ authForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   try {
+     loadCurrentUser();
     if (!isSignup) {
       // LOGIN LOGIC
       const res = await fetch(`${API_BASE}/api/users/login`, {
@@ -160,9 +163,14 @@ authForm.addEventListener("submit", async (e) => {
         alert(data.message || "Signup failed");
         return;
       }
+      else{
+         alert(isSignup ? "user registered successfully" : "user logged in");
 
       document.getElementById("authModal").classList.add("hidden");
       await loadCurrentUser();
+     
+    }
+      
     }
   } catch (err) {
     console.error(err);

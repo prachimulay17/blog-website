@@ -1,3 +1,5 @@
+import { ok } from "assert";
+
 const API_BASE = "http://localhost:8000";
 
 
@@ -86,14 +88,18 @@ form.addEventListener("submit", async (e) => {
 
     alert("Blog published successfully");
 
-    setTimeout(() => {
-      window.location.href = "index.html";
-    }, 600);
+
+   if (confirm(ok)){
+     setTimeout(() => {
+       window.location.href = "index.html";
+     }, 400);
+   }
 
   } catch (err) {
     console.error("FETCH ERROR:", err);
     alert("Network error");
   }
 });
+
 
 

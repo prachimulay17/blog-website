@@ -8,8 +8,6 @@ dotenv.config();
 export const verifyJWT = asyncHandeler(async (req, res, next) => {
   const token = req.cookies?.accessToken;
  
-
-
   if (!token) {
     throw new ApiError(401, "Unauthorized: No token provided");
   }
