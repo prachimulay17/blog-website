@@ -1,2 +1,2 @@
 // config.js
-API_BASE = "http://localhost:8000";
+API_BASE = "https://purpleblog-prachimulay.onrender.com";
