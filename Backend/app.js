@@ -5,7 +5,13 @@ import userRouter from "./routes/user.router.js";
 import blogRouter from "./routes/blog.router.js";
 
 const app = express();
+
+// 🔥 MUST be first (before cookieParser & cors)
+app.set("trust proxy", 1);
+
+// Middleware
 app.use(cookieParser());
+
 app.use(
   cors({
     origin: "https://purpleblog-prachimulay.netlify.app",
@@ -13,17 +19,18 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   })
 );
-app.options("*", cors());
+
+// Preflight
+app.options("*", cors({
+  origin: "https://purpleblog-prachimulay.netlify.app",
+  credentials: true,
+}));
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.set("trust proxy", 1);
 
-
-// Serve static files
-app.use(express.static("public"));
- // Serve files from parent directory
-
-app.use("/api/users", userRouter); // 🔥 REQUIRED
-app.use("/api/blogs", blogRouter); // 🔥 REQUIRED
+// Routes
+app.use("/api/users", userRouter);
+app.use("/api/blogs", blogRouter);
 
 export { app };
