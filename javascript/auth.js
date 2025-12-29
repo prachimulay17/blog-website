@@ -116,7 +116,7 @@ authForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   try {
-     loadCurrentUser();
+     
     if (!isSignup) {
       // LOGIN LOGIC
       const res = await fetch(`${API_BASE}/api/users/login`, {

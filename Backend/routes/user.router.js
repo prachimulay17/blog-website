@@ -10,8 +10,8 @@ router.route('/register').post(upload.fields([
 
 router.route('/login').post(loginUser);
 router.route('/logout').post(verifyJWT,logoutUser);
-router.route('/refresh-token').post(refreshAccessToken);
-router.get("/me", verifyJWT,getCurrentUser);
+router.route('/refresh-token').post(verifyJWT,refreshAccessToken);
+router.route('/me').get( verifyJWT,getCurrentUser);
 
 
 
