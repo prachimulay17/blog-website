@@ -134,7 +134,7 @@ if(!accessToken || !refreshToken){
     httpOnly: true,
     secure: false, // 🔥 MUST be false on localhost
     path: "/",
-    sameSite: "lax",
+    sameSite: "none",
     
   };
 
