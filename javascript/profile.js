@@ -81,6 +81,7 @@ async function loadUserBlogs(userId) {
 
   try {
     const res = await fetch(`${API_BASE}/api/blogs/user/${userId}`, {
+      method:"GET",
       credentials: "include"
     });
 
