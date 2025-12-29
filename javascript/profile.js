@@ -22,31 +22,6 @@ const cancelBtn = document.getElementById("cancelBtn");
 const avatarInput = document.getElementById("avatarInput");
 
 /* ======================
-   AUTH CHECK (BOOTSTRAP)
-====================== */
-document.addEventListener("DOMContentLoaded", () => {
-  checkAuth();
-});
-
-async function checkAuth() {
-  try {
-    const res = await fetch(`${API_BASE}/api/users/me`, {
-      method: "GET",
-      credentials: "include"
-    });
-
-    if (!res.ok) throw new Error("Not logged in");
-
-    const { data } = await res.json();
-    showProfile();
-    populateProfile(data);
-  } catch (err) {
-    console.error("Auth check failed:", err);
-    showLogin();
-  }
-}
-
-/* ======================
    UI HELPERS
 ====================== */
 function showProfile() {
@@ -71,6 +46,20 @@ function populateProfile(user) {
 
   loadUserBlogs(user._id);
 }
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const user = await window.loadCurrentUser();
+
+  if (!user) {
+    showLogin();
+    return;
+  }
+
+  showProfile();
+  populateProfile(user);
+});
+
 
 /* ======================
    FETCH USER BLOGS
