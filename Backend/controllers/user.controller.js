@@ -73,9 +73,9 @@ const registeruser = asyncHandeler(async (req, res) => {
   // 9️⃣ Cookie options (same as login)
   const cookieOptions = {
     httpOnly: true,
-    secure: false, // 🔥 MUST be false on localhost
-    path: "/"
-    // Note: sameSite not set for localhost cross-origin
+    secure: true, // 🔥 MUST be false on localhost
+    path: "/",
+    sameSite:"none"
   };
 
   // 🔟 Response with cookies set
@@ -132,7 +132,7 @@ if(!accessToken || !refreshToken){
   // 6️⃣ cookie options
   const cookieOptions = {
     httpOnly: true,
-    secure: false, // 🔥 MUST be false on localhost
+    secure: true, // 🔥 MUST be false on localhost
     path: "/",
     sameSite: "none",
     
@@ -170,11 +170,11 @@ const logoutUser = asyncHandeler(async (req, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: false, // 🔥 MUST be false on localhost
-    path: "/"
-    // Note: sameSite not set for localhost cross-origin
+    secure: true, // 🔥 MUST be false on localhost
+    path: "/",
+    sameSite: "none",
+    
   };
-
 
   return res
     .status(200)
@@ -218,9 +218,10 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: false, // 🔥 MUST be false on localhost
-    path: "/"
-    // Note: sameSite not set for localhost cross-origin
+    secure: true, // 🔥 MUST be false on localhost
+    path: "/",
+    sameSite: "none",
+    
   };
 
   return res
@@ -310,9 +311,10 @@ const deleteUser = asyncHandeler(async (req, res) => {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: false, // 🔥 MUST be false on localhost
-    path: "/"
-    // Note: sameSite not set for localhost cross-origin
+    secure: true, // 🔥 MUST be false on localhost
+    path: "/",
+    sameSite: "none",
+    
   };
 
 

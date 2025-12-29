@@ -1,5 +1,5 @@
 
-
+API_BASE = "https://blog-website-3jb5.onrender.com";
 let isSignup = false;
 
 const authForm = document.getElementById("authForm");
@@ -78,6 +78,7 @@ window.loadCurrentUser = async function loadCurrentUser() {
       method: "GET",
       credentials: "include"
     });
+    console.log(res);
 
     if (res.status === 401) {
       // 401 means logged out - this is expected behavior, not an error
