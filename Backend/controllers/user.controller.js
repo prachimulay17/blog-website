@@ -1,8 +1,8 @@
 import { User } from "../models/user.model.js";
 import { asyncHandeler } from "../utils/async-handeler.js";
-import { ApiError } from "../utils/apiError.js";
+import { ApiError } from "../utils/ApiError.js";
 import { uploadoncloudinary } from "../utils/cloudinary.js";
-import { ApiResponse } from "../utils/apiResponse.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import bcrypt from "bcrypt";
 
 const registeruser = asyncHandeler(async (req, res) => {
