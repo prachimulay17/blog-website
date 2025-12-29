@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://blog-website-3jb5.onrender.com";
 
 /* ======================
    DOM ELEMENTS
