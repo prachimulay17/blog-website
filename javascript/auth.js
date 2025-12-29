@@ -75,6 +75,7 @@ window.loadCurrentUser = async function loadCurrentUser() {
 
   try {
     const res = await fetch(`${API_BASE}/api/users/me`, {
+      method: "GET",
       credentials: "include"
     });
 
