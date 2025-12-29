@@ -7,7 +7,7 @@ import blogRouter from "./routes/blog.router.js";
 const app = express();
 
 app.use(cors({
- origin: "https://purpleblog-prachimulay.netlify.app/", 
+ origin: "https://purpleblog-prachimulay.netlify.app", 
   credentials: true               
 }));
 app.use(express.json({ limit: "50mb" }));
