@@ -306,6 +306,7 @@ window.debugAuth = async function debugAuth() {
 window.testConnection = async function testConnection() {
   console.log("=== CONNECTION TEST ===");
   console.log("Testing connection to:", API_BASE);
+  console.log("Current time:", new Date().toLocaleString());
 
   try {
     const response = await fetch(`${API_BASE}/api/users/me`, {
@@ -315,17 +316,45 @@ window.testConnection = async function testConnection() {
 
     console.log("Status:", response.status);
     console.log("CORS headers present:", response.headers.get('access-control-allow-origin') !== null);
+    console.log("Response headers:", Object.fromEntries(response.headers.entries()));
 
     if (response.status === 401) {
       console.log("✅ 401 received - This is expected when not logged in");
       console.log("Cookies sent:", document.cookie ? "Yes" : "No (empty)");
+      console.log("Cookie details:", document.cookie);
     } else if (response.status === 200) {
       console.log("✅ 200 received - User is authenticated!");
+      const data = await response.json();
+      console.log("User data:", data);
     } else {
       console.log("⚠️ Unexpected status:", response.status);
+      const errorText = await response.text();
+      console.log("Error response:", errorText);
     }
   } catch (error) {
     console.error("❌ Connection failed:", error.message);
+    console.error("Full error:", error);
+  }
+};
+
+// Emergency debug - just log that functions loaded
+console.log("🔧 Auth debug functions loaded - testConnection and debugAuth available");
+
+// Manual test you can copy-paste into console if functions don't work
+window.manualTest = async () => {
+  console.log("=== MANUAL AUTH TEST ===");
+  console.log("API_BASE:", window.API_BASE || "NOT SET");
+  console.log("Cookies:", document.cookie);
+
+  try {
+    const response = await fetch("https://blog-website-3jb5.onrender.com/api/users/me", {
+      credentials: "include"
+    });
+    console.log("Status:", response.status);
+    const text = await response.text();
+    console.log("Response:", text);
+  } catch (e) {
+    console.error("Error:", e);
   }
 };
 
