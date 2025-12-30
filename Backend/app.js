@@ -20,11 +20,7 @@ app.use(
   })
 );
 
-// Preflight
-app.options("*", cors({
-  origin: "https://purpleblog-prachimulay.netlify.app",
-  credentials: true,
-}));
+
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
