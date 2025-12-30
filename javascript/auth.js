@@ -271,6 +271,64 @@ window.debugAuth = async function debugAuth() {
   }
 };
 
+// Debug functions for testing authentication
+window.debugAuth = async function debugAuth() {
+  console.log("=== AUTH DEBUG ===");
+  console.log("API_BASE:", API_BASE);
+  console.log("Current cookies:", document.cookie);
+  console.log("Current user:", window.currentUser);
+  console.log("Last auth check:", window.lastAuthCheck ? new Date(window.lastAuthCheck).toLocaleString() : "Never");
+
+  try {
+    console.log("Making request to:", `${API_BASE}/api/users/me`);
+    const response = await fetch(`${API_BASE}/api/users/me`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+    console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("✅ SUCCESS - Response data:", data);
+    } else {
+      const errorText = await response.text();
+      console.log("❌ ERROR - Response body:", errorText);
+    }
+  } catch (error) {
+    console.error("❌ NETWORK ERROR:", error);
+  }
+};
+
+// Simple connectivity test
+window.testConnection = async function testConnection() {
+  console.log("=== CONNECTION TEST ===");
+  console.log("Testing connection to:", API_BASE);
+
+  try {
+    const response = await fetch(`${API_BASE}/api/users/me`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    console.log("Status:", response.status);
+    console.log("CORS headers present:", response.headers.get('access-control-allow-origin') !== null);
+
+    if (response.status === 401) {
+      console.log("✅ 401 received - This is expected when not logged in");
+      console.log("Cookies sent:", document.cookie ? "Yes" : "No (empty)");
+    } else if (response.status === 200) {
+      console.log("✅ 200 received - User is authenticated!");
+    } else {
+      console.log("⚠️ Unexpected status:", response.status);
+    }
+  } catch (error) {
+    console.error("❌ Connection failed:", error.message);
+  }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   loadCurrentUser();
 });
