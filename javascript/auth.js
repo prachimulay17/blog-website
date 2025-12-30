@@ -244,6 +244,33 @@ window.updateLoggedOutUI = function updateLoggedOutUI() {
   }
 }
 
+// Debug function for testing authentication
+window.debugAuth = async function debugAuth() {
+  console.log("=== AUTH DEBUG ===");
+  console.log("API_BASE:", API_BASE);
+  console.log("Current cookies:", document.cookie);
+
+  try {
+    const response = await fetch(`${API_BASE}/api/users/me`, {
+      method: "GET",
+      credentials: "include"
+    });
+
+    console.log("Response status:", response.status);
+    console.log("Response headers:", [...response.headers.entries()]);
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Response data:", data);
+    } else {
+      const errorText = await response.text();
+      console.log("Error response:", errorText);
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+  }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   loadCurrentUser();
 });
