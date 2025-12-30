@@ -135,7 +135,7 @@ if(!accessToken || !refreshToken){
     secure: true, // 🔥 MUST be false on localhost
     path: "/",
     sameSite: "none",
-    
+    domain: ".netlify.app" // Allow all netlify.app subdomains
   };
 
 
@@ -173,7 +173,7 @@ const logoutUser = asyncHandeler(async (req, res) => {
     secure: true, // 🔥 MUST be false on localhost
     path: "/",
     sameSite: "none",
-    
+    domain: ".netlify.app" // Allow all netlify.app subdomains
   };
 
   return res
@@ -186,8 +186,7 @@ const logoutUser = asyncHandeler(async (req, res) => {
 
 
 const refreshAccessToken = asyncHandeler(async (req, res) => {
-  const incomingRefreshToken =
-    req.cookies?.refreshToken || req.body?.refreshToken;
+  const incomingRefreshToken = req.cookies?.refreshToken;
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Refresh token missing");
@@ -221,7 +220,7 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
     secure: true, // 🔥 MUST be false on localhost
     path: "/",
     sameSite: "none",
-    
+    domain: ".netlify.app" // Allow all netlify.app subdomains
   };
 
   return res
@@ -314,7 +313,7 @@ const deleteUser = asyncHandeler(async (req, res) => {
     secure: true, // 🔥 MUST be false on localhost
     path: "/",
     sameSite: "none",
-    
+    domain: ".netlify.app" // Allow all netlify.app subdomains
   };
 
 

@@ -286,7 +286,13 @@ logoutBtn?.addEventListener("click", async () => {
     if (profileAvatar.dataset.objectUrl) {
       URL.revokeObjectURL(profileAvatar.dataset.objectUrl);
     }
-    
+
+    // Clear auth cache
+    window.currentUser = null;
+    if (typeof lastAuthCheck !== 'undefined') {
+      lastAuthCheck = 0;
+    }
+
     // Redirect to login page
     window.location.href = "/html/index.html";
     alert("user logged out successfully");
