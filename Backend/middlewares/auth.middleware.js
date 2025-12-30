@@ -1,28 +1,23 @@
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandeler } from "../utils/async-handeler.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+console.log("Cookies received:", req.cookies);
 
 export const verifyJWT = asyncHandeler(async (req, res, next) => {
-  // Only check cookies for httpOnly tokens - NEVER check req.body for security
-  const token = req.cookies?.accessToken;
-
+  const token = req.cookies?.accessToken||req.body?.accessToken;
+ 
   if (!token) {
-    throw new ApiError(401, "Unauthorized: No access token provided");
+    throw new ApiError(401, "Unauthorized: No token provided");
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    // ✅ decoded must contain _id
-    req.user = decoded;
-    next();
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      throw new ApiError(401, "Access token expired");
-    } else if (error.name === 'JsonWebTokenError') {
-      throw new ApiError(401, "Invalid access token");
-    } else {
-      throw new ApiError(401, "Token verification failed");
-    }
-  }
+  // ✅ decoded must contain _id
+  req.user = decoded;
+
+  next();
 });

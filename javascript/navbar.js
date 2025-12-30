@@ -38,10 +38,6 @@ async function logout() {
     credentials: "include"
   });
 
-  // Clear cached auth state
-  window.currentUser = null;
-  lastAuthCheck = 0; // Reset cache timestamp
-
   // Refresh auth state after logout
   await loadCurrentUser();
 }
