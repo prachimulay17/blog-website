@@ -305,6 +305,7 @@ window.debugAuth = async function debugAuth() {
 // Simple connectivity test
 window.testConnection = async function testConnection() {
   console.log("=== CONNECTION TEST ===");
+  console.log("Current page origin:", window.location.origin);
   console.log("Testing connection to:", API_BASE);
   console.log("Current time:", new Date().toLocaleString());
 
@@ -316,12 +317,15 @@ window.testConnection = async function testConnection() {
 
     console.log("Status:", response.status);
     console.log("CORS headers present:", response.headers.get('access-control-allow-origin') !== null);
-    console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+    console.log("CORS allowed origin:", response.headers.get('access-control-allow-origin'));
+    console.log("Credentials allowed:", response.headers.get('access-control-allow-credentials'));
 
     if (response.status === 401) {
       console.log("✅ 401 received - This is expected when not logged in");
       console.log("Cookies sent:", document.cookie ? "Yes" : "No (empty)");
-      console.log("Cookie details:", document.cookie);
+      if (document.cookie) {
+        console.log("Cookie details:", document.cookie);
+      }
     } else if (response.status === 200) {
       console.log("✅ 200 received - User is authenticated!");
       const data = await response.json();
@@ -334,11 +338,18 @@ window.testConnection = async function testConnection() {
   } catch (error) {
     console.error("❌ Connection failed:", error.message);
     console.error("Full error:", error);
+    if (error.message.includes('CORS')) {
+      console.error("🚨 CORS ERROR - Backend not allowing this origin");
+      console.error("Current origin:", window.location.origin);
+      console.error("Backend expects one of: purpleblog-prachimulay.netlify.app, *.netlify.app, *.netlify.dev");
+    }
   }
 };
 
 // Emergency debug - just log that functions loaded
 console.log("🔧 Auth debug functions loaded - testConnection and debugAuth available");
+console.log("Current page:", window.location.href);
+console.log("Page origin:", window.location.origin);
 
 // Manual test you can copy-paste into console if functions don't work
 window.manualTest = async () => {
