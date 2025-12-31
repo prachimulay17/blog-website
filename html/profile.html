@@ -4,26 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PurpleBlog | Profile</title>
-   <link rel="stylesheet" href="/css/nav.css">
+  <link rel="stylesheet" href="/css/nav.css">
   <link rel="stylesheet" href="/css/profile.css">
-  
 </head>
 
 <body>
 
-  
-<header class="navbar">
-  <div class="logo">PurpleBlog</div>
+  <header class="navbar">
+    <div class="logo">PurpleBlog</div>
 
-  <div class="hamburger" id="hamburger">☰</div>
+    <div class="hamburger" id="hamburger">☰</div>
 
-  <nav class="nav-links" id="navLinks">
-   
-    <a href="/html/index.html" id="home">Home</a>
-  </nav>
+    <nav class="nav-links" id="navLinks">
+      <a href="/html/index.html" id="home">Home</a>
+    </nav>
+  </header>
 
-</header>
+  <!-- LOADING STATE (Shows while checking auth) -->
+  <div id="loadingAuth" style="text-align: center; padding: 100px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <div style="max-width: 400px; margin: 0 auto;">
+      <h2 style="color: #5E548E; margin-bottom: 12px; font-size: 24px;">Loading your profile...</h2>
+      <p style="color: #9F86C0; font-size: 15px;">Please wait a moment</p>
+      <!-- Simple loading spinner -->
+      <div style="margin-top: 30px;">
+        <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #E0B1CB; border-top-color: #5E548E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      </div>
+    </div>
+  </div>
 
+  <!-- PROFILE PAGE (Hidden initially, shown after auth check) -->
   <div id="profilePage" class="profile-layout" style="display:none">
 
     <!-- PROFILE CARD -->
@@ -40,9 +49,8 @@
 
       <div class="buttons">
         <button id="editBtn" class="edit-btn">Edit Profile</button>
-         <button id="logoutBtn" class="logout-btn">Logout</button> 
+        <button id="logoutBtn" class="logout-btn">Logout</button> 
       </div>
-
 
       <form id="editForm" class="edit-form" style="display:none">
         <label>
@@ -75,7 +83,41 @@
 
   </div>
 
+  <!-- Loading spinner animation -->
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Ensure buttons are side by side */
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  </style>
+
+  <!-- CRITICAL: Set API_BASE before loading scripts -->
+  <script>
+    window.API_BASE = "http://localhost:8000";
+    console.log("✅ API_BASE configured:", window.API_BASE);
+  </script>
+
+  <!-- Load scripts in correct order -->
+  <script src="/javascript/auth.js"></script>
   <script src="/javascript/profile.js"></script>
   <script src="/javascript/navbar.js"></script>
+
+  <script>
+  // Force hide loading after page loads
+  window.addEventListener('load', () => {
+    const loading = document.getElementById('loadingAuth');
+    if (loading) {
+      loading.style.display = 'none';
+    }
+  });
+</script>
+
 </body>
 </html>

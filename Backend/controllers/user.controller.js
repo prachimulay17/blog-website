@@ -71,12 +71,12 @@ const registeruser = asyncHandeler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   // 9️⃣ Cookie options (same as login)
-  const cookieOptions = {
-    httpOnly: true,
-    secure: true, // 🔥 MUST be false on localhost
-    path: "/",
-    sameSite:"none"
-  };
+ const cookieOptions = {
+  httpOnly: true,
+  secure: false,        // 🔥 MUST be false on localhost
+  sameSite: "lax",      // 🔥 localhost-friendly
+};
+
 
   // 🔟 Response with cookies set
   return res
@@ -130,13 +130,11 @@ if(!accessToken || !refreshToken){
   await user.save({ validateBeforeSave: false });
 
   // 6️⃣ cookie options
-  const cookieOptions = {
-    httpOnly: true,
-    secure: true, // 🔥 MUST be false on localhost
-    path: "/",
-    sameSite: "none",
-    domain: ".netlify.app" // Allow all netlify.app subdomains
-  };
+ const cookieOptions = {
+  httpOnly: true,
+  secure: false,        // 🔥 MUST be false on localhost
+  sameSite: "lax",      // 🔥 localhost-friendly
+};
 
 
   // 7️⃣ send response
@@ -169,12 +167,11 @@ const logoutUser = asyncHandeler(async (req, res) => {
   );
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: true, // 🔥 MUST be false on localhost
-    path: "/",
-    sameSite: "none",
-    domain: ".netlify.app" // Allow all netlify.app subdomains
-  };
+  httpOnly: true,
+  secure: false,        // 🔥 MUST be false on localhost
+  sameSite: "lax",      // 🔥 localhost-friendly
+};
+
 
   return res
     .status(200)
@@ -216,12 +213,10 @@ const refreshAccessToken = asyncHandeler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: true, // 🔥 MUST be false on localhost
-    path: "/",
-    sameSite: "none",
-    domain: ".netlify.app" // Allow all netlify.app subdomains
-  };
+  httpOnly: true,
+  secure: false,        // 🔥 MUST be false on localhost
+  sameSite: "lax",      // 🔥 localhost-friendly
+};
 
   return res
     .status(200)
@@ -309,12 +304,11 @@ const deleteUser = asyncHandeler(async (req, res) => {
   }
 
   const cookieOptions = {
-    httpOnly: true,
-    secure: true, // 🔥 MUST be false on localhost
-    path: "/",
-    sameSite: "none",
-    domain: ".netlify.app" // Allow all netlify.app subdomains
-  };
+  httpOnly: true,
+  secure: false,        // 🔥 MUST be false on localhost
+  sameSite: "lax",      // 🔥 localhost-friendly
+};
+
 
 
   return res
